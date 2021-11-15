@@ -1,9 +1,10 @@
 from Market import Market
 
-ibm = Market("pfe")
-ibm.getHistorical1Day()
-ibm.getLivePrice()
-ibm.getRSI1Day()
+markets_to_track = ["pfe", "ibm"]
 
-print (ibm.data)
-print(ibm.RSI1Day)
+tracked_markets = [Market(market) for market in markets_to_track]
+
+for m in tracked_markets:
+    print(m.market)
+    m.update()
+    print(m.RSI1Day)
