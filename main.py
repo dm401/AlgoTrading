@@ -44,6 +44,9 @@ while monitor < 10:
         
     last_vals = curr_vals
 
+    for m in markets_to_track:
+        m.buysell_if_should()
+
     t_sleep = 2
     print(f"Slept {t_sleep}s, going again!")
     monitor += t_sleep

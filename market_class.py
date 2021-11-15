@@ -65,3 +65,17 @@ class Market:
         if missing == 0:
             rsis = ta.momentum.RSIIndicator(prices, 14)
             self.RSI1Day = rsis.rsi().values[-1]
+
+
+    def buy(self):
+        return
+    
+    def sell(self):
+        return
+
+    def buysell_if_should(self):
+        if self.should_buy():
+            self.buy()
+        if self.should_sell():
+            self.sell()
+
