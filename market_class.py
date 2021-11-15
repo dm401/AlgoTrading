@@ -18,6 +18,7 @@ class Market:
         # self.getHistorical1Day()
         self.getLivePrice()
         self.getRSI1Day()
+        return "Done"
 
     def getHistorical1Day(self):
         # past 100 *TRADING* days data, actual count may be lower for days not traded like holidays
@@ -33,10 +34,11 @@ class Market:
         url = f"https://api.tiingo.com/iex/{self.market}/prices?startDate={startDate}" \
               f"&resampleFreq=8hour&afterHours=false&forceFill=true&token={self.apikey}&endDate={endDate}"
         x = requests.get(url)
-
+        print(x.status_code)
         df = pd.DataFrame(x.json())
         df.drop(columns=df.columns[[2, 3, 4]], axis=1, inplace=True)
         self.data = df
+        return "Done"
 
     # rn this always appends new data, but sometimes we might only want one piece of data from current day (like in the
     # case of RSI1Day)
@@ -65,7 +67,6 @@ class Market:
         if missing == 0:
             rsis = ta.momentum.RSIIndicator(prices, 14)
             self.RSI1Day = rsis.rsi().values[-1]
-
 
     def buy(self):
         return
