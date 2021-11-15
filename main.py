@@ -44,6 +44,7 @@ while monitor < 10:
         
     last_vals = curr_vals
 
-    print("Slept 1s, going again!")
-    monitor += 2
-    time.sleep(2)
+    t_sleep = 2
+    print(f"Slept {t_sleep}s, going again!")
+    monitor += t_sleep
+    time.sleep(t_sleep)
