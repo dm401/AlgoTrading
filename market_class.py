@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import ta.momentum
+import ta.trend
 import datetime
 
 class Market:
@@ -18,11 +19,12 @@ class Market:
         # self.getHistorical1Day()
         self.getLivePrice()
         self.getRSI1Day()
+        self.getADX1Day()
         return "Done"
 
     def getHistorical1Day(self):
         # past 100 *TRADING* days data, actual count may be lower for days not traded like holidays
-        i = 100
+        i = 50
         print("Getting historical data")
         startDate = datetime.date.today()
         while (i > 0):
@@ -35,7 +37,7 @@ class Market:
               f"&resampleFreq=8hour&afterHours=false&forceFill=true&token={self.apikey}&endDate={endDate}"
         x = requests.get(url)
         df = pd.DataFrame(x.json())
-        df.drop(columns=df.columns[[2, 3, 4]], axis=1, inplace=True)
+        df.drop(columns=df.columns[[4]], axis=1, inplace=True)
         self.data = df
         return "Done"
 
@@ -46,7 +48,7 @@ class Market:
         url = f"https://api.tiingo.com/iex/?tickers={self.market}&token={self.apikey}"
         x = requests.get(url)
         df = pd.DataFrame(x.json())
-        df.drop(['low', 'ticker', 'bidPrice', 'bidSize', 'lastSaleTimestamp', 'prevClose', 'high', 'mid', 'volume',
+        df.drop(['ticker', 'bidPrice', 'bidSize', 'lastSaleTimestamp', 'prevClose', 'mid', 'volume',
                  'open', 'quoteTimestamp', 'askPrice', 'askSize', 'lastSize', 'tngoLast'], axis=1, inplace=True)
         df.rename(columns={'last': 'close', 'timestamp': 'date'}, inplace=True)
 
@@ -61,25 +63,29 @@ class Market:
         else:
             self.data = self.data.append(df, ignore_index=True)
 
+        print(self.data)
+
 
     def getRSI1Day(self):
         print("Getting RSI")
         df = self.data
-        prices = df['close'].squeeze()
+        close = df['close'].squeeze()
 
-        # check for missing data
-        missing = 0
-        for x in prices:
-            if int(x) == 0:
-                missing = 1
+        rsis = ta.momentum.RSIIndicator(close, 14)
+        self.RSI1Day = rsis.rsi().values[-1]
 
-        if missing == 0:
-            rsis = ta.momentum.RSIIndicator(prices, 14)
-            self.RSI1Day = rsis.rsi().values[-1]
 
-    def buy(self):
-        return
-    
+    def getADX1Day(self):
+        print("getting ADX")
+        df = self.data
+        low = df['low'].squeeze()
+        high = df['high'].squeeze()
+        close = df['close'].squeeze()
+
+        ADXs = ta.trend.ADXIndicator(high, low, close, 14)
+        self.ADX = ADXs.adx().values[-1]
+
+
     def sell(self):
         return
 
