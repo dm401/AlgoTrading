@@ -34,7 +34,6 @@ class Market:
         url = f"https://api.tiingo.com/iex/{self.market}/prices?startDate={startDate}" \
               f"&resampleFreq=8hour&afterHours=false&forceFill=true&token={self.apikey}&endDate={endDate}"
         x = requests.get(url)
-        print(x.status_code)
         df = pd.DataFrame(x.json())
         df.drop(columns=df.columns[[2, 3, 4]], axis=1, inplace=True)
         self.data = df
@@ -51,7 +50,17 @@ class Market:
                  'open', 'quoteTimestamp', 'askPrice', 'askSize', 'lastSize', 'tngoLast'], axis=1, inplace=True)
         df.rename(columns={'last': 'close', 'timestamp': 'date'}, inplace=True)
 
-        self.data = self.data.append(df, ignore_index=True)
+        # dunno if string matching is cleanest way to do this but seems to work
+
+        currentDataDay = str(df["date"][0])[0:10]
+        lastDataDay = str((self.data["date"].iloc[-1])[0:10])
+
+        if currentDataDay == lastDataDay:
+            self.data.drop(self.data.tail(1).index, inplace=True)
+            self.data = self.data.append(df, ignore_index=True)
+        else:
+            self.data = self.data.append(df, ignore_index=True)
+
 
     def getRSI1Day(self):
         print("Getting RSI")
