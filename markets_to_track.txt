@@ -1,1 +1,5 @@
+ibm
+aapl
+goog
+tsla
 pfe

@@ -19,12 +19,12 @@ class Market:
         # self.getHistorical1Day()
         self.getLivePrice()
         self.getRSI1Day()
-        self.getADX1Day()
+        #self.getADX1Day()
         return "Done"
 
     def getHistorical1Day(self):
         # past 100 *TRADING* days data, actual count may be lower for days not traded like holidays
-        i = 50
+        i = 100
         print("Getting historical data")
         startDate = datetime.date.today()
         while (i > 0):
@@ -33,11 +33,11 @@ class Market:
             startDate = startDate - datetime.timedelta(days=1)
         endDate = datetime.date.today() - datetime.timedelta(days=1)
 
-        url = f"https://api.tiingo.com/iex/{self.market}/prices?startDate={startDate}" \
-              f"&resampleFreq=8hour&afterHours=false&forceFill=true&token={self.apikey}&endDate={endDate}"
+        url = f"https://api.tiingo.com/tiingo/daily/{self.market}/prices?startDate={startDate}" \
+              f"&resampleFreq=daily&token={self.apikey}&endDate={endDate}&format=json"
         x = requests.get(url)
         df = pd.DataFrame(x.json())
-        df.drop(columns=df.columns[[4]], axis=1, inplace=True)
+        df.drop(columns=df.columns[[4,5,6,7,8,9,10,11,12]], axis=1, inplace=True)
         self.data = df
         return "Done"
 
@@ -63,7 +63,7 @@ class Market:
         else:
             self.data = self.data.append(df, ignore_index=True)
 
-        print(self.data)
+        #print(self.data)
 
 
     def getRSI1Day(self):
