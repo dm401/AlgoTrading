@@ -20,6 +20,8 @@ class Market:
         self.getLivePrice()
         self.getRSI1Day()
         self.getADX1Day()
+        self.getMACD1Day()
+        self.compareToThresholds()
         return "Done"
 
     def getHistorical1Day(self):
@@ -88,6 +90,29 @@ class Market:
 
         ADXs = ta.trend.ADXIndicator(high, low, close, 14)
         self.ADX = ADXs.adx().values[-1]
+
+
+    def getMACD1Day(self):
+        print("getting MACD")
+        df = self.data
+        close = df['close'].squeeze()
+
+        MACDs = ta.trend.MACD(close)
+        self.MACD = MACDs.macd_diff().values[-1]
+        self.MACDYest = MACDs.macd_diff().values[-2]
+
+
+    def compareToThresholds(self):
+        self.score = 0
+        if(self.ADX > 25):
+            self.score += 1
+            print(self.market + "passing ADX\n")
+        if(self.RSI1Day < 30):
+            self.score += 1
+            print(self.market + "passing RSI\n")
+        if(self.MACD > 0 and self.MACDYest < 0):
+            self.score += 1
+            print(self.market + "passing MACD\n")
 
 
     def sell(self):
