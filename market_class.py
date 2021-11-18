@@ -19,7 +19,7 @@ class Market:
         # self.getHistorical1Day()
         self.getLivePrice()
         self.getRSI1Day()
-        #self.getADX1Day()
+        self.getADX1Day()
         return "Done"
 
     def getHistorical1Day(self):
@@ -41,7 +41,7 @@ class Market:
         df.rename(columns={'adjClose': 'close', 'adjHigh':'high', 'adjLow': 'low'}, inplace=True)
 
         self.data = df
-        print(self.data)
+        #print(self.data)
         return "Done"
 
 
