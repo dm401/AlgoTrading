@@ -37,9 +37,13 @@ class Market:
               f"&resampleFreq=daily&token={self.apikey}&endDate={endDate}&format=json"
         x = requests.get(url)
         df = pd.DataFrame(x.json())
-        df.drop(columns=df.columns[[4,5,6,7,8,9,10,11,12]], axis=1, inplace=True)
+        df.drop(columns=df.columns[[1,2,3,4,5,9,10,11,12]], axis=1, inplace=True)
+        df.rename(columns={'adjClose': 'close', 'adjHigh':'high', 'adjLow': 'low'}, inplace=True)
+
         self.data = df
+        print(self.data)
         return "Done"
+
 
     # rn this always appends new data, but sometimes we might only want one piece of data from current day (like in the
     # case of RSI1Day)

@@ -1,5 +1,5 @@
-ibm
-aapl
-goog
-tsla
-pfe
+lcid
+twtr
+nflx
+amzn
+coin
