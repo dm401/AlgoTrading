@@ -44,7 +44,7 @@ class Market:
               f"&resampleFreq=daily&token={self.apikey}&endDate={endDate}&format=json"
         x = handle_get_req(url)
         if not x.json():
-            logging.info("Nothing in response...")
+            logging.debug("Nothing in response...")
         df = pd.DataFrame(x.json())
         df.drop(columns=df.columns[[1,2,3,4,5,9,10,11,12]], axis=1, inplace=True)
         df.rename(columns={'adjClose': 'close', 'adjHigh':'high', 'adjLow': 'low'}, inplace=True)
@@ -60,7 +60,7 @@ class Market:
         url = f"https://api.tiingo.com/iex/?tickers={self.market_name}&token={self.apikey}"
         x = handle_get_req(url)
         if not x.json():
-            logging.info("Nothing in response...")
+            logging.debug("Nothing in response...")
         df = pd.DataFrame(x.json())
         df.drop(['ticker', 'bidPrice', 'bidSize', 'lastSaleTimestamp', 'prevClose', 'mid', 'volume',
                  'open', 'quoteTimestamp', 'askPrice', 'askSize', 'lastSize', 'tngoLast'], axis=1, inplace=True)

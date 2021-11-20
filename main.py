@@ -25,12 +25,13 @@ def loop(tracked_markets, limit=10, sleeper=2):
         logging.info(msg)
         logging.info("Filtering out invalid markets")
         valid_markets = []
+        invalid_markets = []
         for m in tracked_markets:
-            if not m.score:
-                logging.info("Dropped %s as it got an invalid API resp", m.market_name)
-            else:
+            if m.score:
                 valid_markets.append(m)
-        logging.info("Filtered out invalid markets")
+            else:
+                invalid_markets.append(m.market_name)
+        logging.info("Filtered out the following invalid markets %s", invalid_markets)
         tracked_markets = valid_markets
         monitor += 1
         time.sleep(sleeper)
