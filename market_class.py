@@ -13,6 +13,9 @@ class Market:
         if not data:
             pd.DataFrame
         self.score = None
+        self.RSI1Day = None
+        self.MACD = None
+        self.ADX = None
 
     def update(self):
         """
@@ -29,7 +32,7 @@ class Market:
     def getHistorical1Day(self):
         # past 100 *TRADING* days data, actual count may be lower for days not traded like holidays
         i = 100
-        logging.info("Getting historical data")
+        logging.debug("Getting historical data for %s", self.market)
         startDate = datetime.date.today()
         while (i > 0):
             if (startDate.weekday() < 5):
@@ -53,7 +56,7 @@ class Market:
     # rn this always appends new data, but sometimes we might only want one piece of data from current day (like in the
     # case of RSI1Day)
     def getLivePrice(self):
-        logging.info("Getting live price")
+        logging.debug("Getting live price for %s", self.market)
         url = f"https://api.tiingo.com/iex/?tickers={self.market}&token={self.apikey}"
         x = handle_get_req(url)
         if not x.json():
@@ -78,7 +81,7 @@ class Market:
 
 
     def getRSI1Day(self):
-        logging.debug("Getting RSI")
+        logging.debug("Getting RSI for %s", self.market)
         df = self.data
         close = df['close'].squeeze()
 
@@ -87,7 +90,7 @@ class Market:
 
 
     def getADX1Day(self):
-        logging.debug("Getting ADX")
+        logging.debug("Getting ADX for %s", self.market)
         df = self.data
         low = df['low'].squeeze()
         high = df['high'].squeeze()
@@ -98,7 +101,7 @@ class Market:
 
 
     def getMACD1Day(self):
-        logging.debug("Getting MACD")
+        logging.debug("Getting MACD for %s", self.market)
         df = self.data
         close = df['close'].squeeze()
 
