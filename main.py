@@ -20,6 +20,13 @@ def loop(tracked_markets, limit=10, sleeper=2):
         # curr_adxs = [m.ADX for m in tracked_markets]
         # logging.info("ADXs: ", curr_adxs)
         scores = [m.score for m in tracked_markets]
+
+        buys = []
+        for m in tracked_markets:
+            if(m.score == 3):
+                buys.append(m.market_name)
+        logging.info("BUYS: %s", buys)
+
         logging.info("Scores %s", scores)
         msg = f"Sleeping {sleeper}s, going again! {100*monitor/limit}% {monitor}/{limit}"
         logging.info(msg)

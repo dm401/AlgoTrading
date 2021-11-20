@@ -118,7 +118,7 @@ class Market:
         if(self.RSI1Day < 30):
             self.score += 1
             logging.debug(self.market_name + " passing RSI\n")
-        if(self.MACD > 0 and self.MACDYest < 0):
+        if((self.MACD - self.MACDYest)/abs(self.MACDYest) * 100 > 0):
             self.score += 1
             logging.debug(self.market_name + " passing MACD\n")
 
