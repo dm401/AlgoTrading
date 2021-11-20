@@ -3,6 +3,7 @@ import pandas as pd
 import ta.momentum
 import ta.trend
 import datetime
+import logging
 
 class Market:
     apikey = open("apikey.txt").readline()
@@ -11,6 +12,7 @@ class Market:
         self.market = market
         if not data:
             pd.DataFrame
+        self.score = None
 
     def update(self):
         """
@@ -27,7 +29,7 @@ class Market:
     def getHistorical1Day(self):
         # past 100 *TRADING* days data, actual count may be lower for days not traded like holidays
         i = 100
-        print("Getting historical data")
+        logging.info("Getting historical data")
         startDate = datetime.date.today()
         while (i > 0):
             if (startDate.weekday() < 5):
@@ -37,22 +39,25 @@ class Market:
 
         url = f"https://api.tiingo.com/tiingo/daily/{self.market}/prices?startDate={startDate}" \
               f"&resampleFreq=daily&token={self.apikey}&endDate={endDate}&format=json"
-        x = requests.get(url)
+        x = handle_get_req(url)
+        if not x.json():
+            logging.info("Nothing in response...")
         df = pd.DataFrame(x.json())
         df.drop(columns=df.columns[[1,2,3,4,5,9,10,11,12]], axis=1, inplace=True)
         df.rename(columns={'adjClose': 'close', 'adjHigh':'high', 'adjLow': 'low'}, inplace=True)
 
         self.data = df
-        #print(self.data)
+        #logging.info(self.data)
         return "Done"
-
 
     # rn this always appends new data, but sometimes we might only want one piece of data from current day (like in the
     # case of RSI1Day)
     def getLivePrice(self):
-        print("Getting live price")
+        logging.info("Getting live price")
         url = f"https://api.tiingo.com/iex/?tickers={self.market}&token={self.apikey}"
-        x = requests.get(url)
+        x = handle_get_req(url)
+        if not x.json():
+            logging.info("Nothing in response...")
         df = pd.DataFrame(x.json())
         df.drop(['ticker', 'bidPrice', 'bidSize', 'lastSaleTimestamp', 'prevClose', 'mid', 'volume',
                  'open', 'quoteTimestamp', 'askPrice', 'askSize', 'lastSize', 'tngoLast'], axis=1, inplace=True)
@@ -69,11 +74,11 @@ class Market:
         else:
             self.data = self.data.append(df, ignore_index=True)
 
-        #print(self.data)
+        #logging.info(self.data)
 
 
     def getRSI1Day(self):
-        print("Getting RSI")
+        logging.debug("Getting RSI")
         df = self.data
         close = df['close'].squeeze()
 
@@ -82,7 +87,7 @@ class Market:
 
 
     def getADX1Day(self):
-        print("getting ADX")
+        logging.debug("Getting ADX")
         df = self.data
         low = df['low'].squeeze()
         high = df['high'].squeeze()
@@ -93,7 +98,7 @@ class Market:
 
 
     def getMACD1Day(self):
-        print("getting MACD")
+        logging.debug("Getting MACD")
         df = self.data
         close = df['close'].squeeze()
 
@@ -106,13 +111,13 @@ class Market:
         self.score = 0
         if(self.ADX > 25):
             self.score += 1
-            print(self.market + "passing ADX\n")
+            logging.debug(self.market + " passing ADX\n")
         if(self.RSI1Day < 30):
             self.score += 1
-            print(self.market + "passing RSI\n")
+            logging.debug(self.market + " passing RSI\n")
         if(self.MACD > 0 and self.MACDYest < 0):
             self.score += 1
-            print(self.market + "passing MACD\n")
+            logging.debug(self.market + " passing MACD\n")
 
 
     def sell(self):
@@ -124,3 +129,13 @@ class Market:
         if self.should_sell():
             self.sell()
 
+def handle_get_req(url, n=0):
+    while n < 3:
+        try:
+            resp = requests.get(url)
+            resp.raise_for_status()
+        except requests.HTTPError as exc:
+            if resp.status_code == 429 and n < 3:
+                logging.info("Had to retry url %s as 429, attempt %s", url, n)
+                handle_get_req(url, n+1)
+        return resp

@@ -2,15 +2,17 @@ from market_class import Market
 from consts import * 
 import threading
 from concurrent.futures import ThreadPoolExecutor, wait
+import logging
+import requests
 
-
-def get_markets():
+def get_markets(market_fpath):
     """
     Returns an iterable of the markets we track
     """
     # Read in the markets we want to track from file
-    with open("markets_to_track.txt", "r") as ffile:
-        markets_to_track = ffile.read().splitlines() 
+    with open(market_fpath, "r") as ffile:
+        markets_to_track = ffile.read().splitlines()
+    logging.info("Got markets from %s", market_fpath)
 
     tracked_markets = [Market(market) for market in markets_to_track]
     return tracked_markets
