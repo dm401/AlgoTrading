@@ -8,8 +8,8 @@ import logging
 class Market:
     apikey = open("apikey.txt").readline()
 
-    def __init__(self, market, data=None):
-        self.market = market
+    def __init__(self, market_name, data=None):
+        self.market_name = market_name
         if not data:
             pd.DataFrame
         self.score = None
@@ -32,7 +32,7 @@ class Market:
     def getHistorical1Day(self):
         # past 100 *TRADING* days data, actual count may be lower for days not traded like holidays
         i = 100
-        logging.debug("Getting historical data for %s", self.market)
+        logging.debug("Getting historical data for %s", self.market_name)
         startDate = datetime.date.today()
         while (i > 0):
             if (startDate.weekday() < 5):
@@ -40,7 +40,7 @@ class Market:
             startDate = startDate - datetime.timedelta(days=1)
         endDate = datetime.date.today() - datetime.timedelta(days=1)
 
-        url = f"https://api.tiingo.com/tiingo/daily/{self.market}/prices?startDate={startDate}" \
+        url = f"https://api.tiingo.com/tiingo/daily/{self.market_name}/prices?startDate={startDate}" \
               f"&resampleFreq=daily&token={self.apikey}&endDate={endDate}&format=json"
         x = handle_get_req(url)
         if not x.json():
@@ -56,8 +56,8 @@ class Market:
     # rn this always appends new data, but sometimes we might only want one piece of data from current day (like in the
     # case of RSI1Day)
     def getLivePrice(self):
-        logging.debug("Getting live price for %s", self.market)
-        url = f"https://api.tiingo.com/iex/?tickers={self.market}&token={self.apikey}"
+        logging.debug("Getting live price for %s", self.market_name)
+        url = f"https://api.tiingo.com/iex/?tickers={self.market_name}&token={self.apikey}"
         x = handle_get_req(url)
         if not x.json():
             logging.info("Nothing in response...")
@@ -81,7 +81,7 @@ class Market:
 
 
     def getRSI1Day(self):
-        logging.debug("Getting RSI for %s", self.market)
+        logging.debug("Getting RSI for %s", self.market_name)
         df = self.data
         close = df['close'].squeeze()
 
@@ -90,7 +90,7 @@ class Market:
 
 
     def getADX1Day(self):
-        logging.debug("Getting ADX for %s", self.market)
+        logging.debug("Getting ADX for %s", self.market_name)
         df = self.data
         low = df['low'].squeeze()
         high = df['high'].squeeze()
@@ -101,7 +101,7 @@ class Market:
 
 
     def getMACD1Day(self):
-        logging.debug("Getting MACD for %s", self.market)
+        logging.debug("Getting MACD for %s", self.market_name)
         df = self.data
         close = df['close'].squeeze()
 
@@ -114,13 +114,13 @@ class Market:
         self.score = 0
         if(self.ADX > 25):
             self.score += 1
-            logging.debug(self.market + " passing ADX\n")
+            logging.debug(self.market_name + " passing ADX\n")
         if(self.RSI1Day < 30):
             self.score += 1
-            logging.debug(self.market + " passing RSI\n")
+            logging.debug(self.market_name + " passing RSI\n")
         if(self.MACD > 0 and self.MACDYest < 0):
             self.score += 1
-            logging.debug(self.market + " passing MACD\n")
+            logging.debug(self.market_name + " passing MACD\n")
 
 
     def sell(self):

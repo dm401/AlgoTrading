@@ -25,17 +25,21 @@ def loop(tracked_markets, limit=10, sleeper=2):
         logging.info(msg)
         logging.info("Filtering out invalid markets")
         valid_markets = []
-        for m in markets:
+        for m in tracked_markets:
             if not m.score:
-                logging.info("Dropped %s as it got an invalid API resp", m.market)
+                logging.info("Dropped %s as it got an invalid API resp", m.market_name)
             else:
                 valid_markets.append(m)
+        logging.info("Filtered out invalid markets")
         tracked_markets = valid_markets
         monitor += 1
         time.sleep(sleeper)
 
 
 if __name__ == "__main__":
+    if consts.should_clear_logs:
+        with open('logfile.log', 'r+') as ffile:
+            ffile.truncate(0)
     logging.info("Starting...")
     markets = funcs.get_markets("markets_to_track.txt")
     logging.info("Getting historical data")
