@@ -27,7 +27,7 @@ def loop(tracked_markets, limit=10, sleeper=2):
         valid_markets = []
         invalid_markets = []
         for m in tracked_markets:
-            if m.score:
+            if m.score is not None:
                 valid_markets.append(m)
             else:
                 invalid_markets.append(m.market_name)
