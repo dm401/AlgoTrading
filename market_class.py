@@ -4,6 +4,7 @@ import ta.momentum
 import ta.trend
 import datetime
 import logging
+import time
 
 class Market:
     apikey = open("apikey.txt").readline()
@@ -16,6 +17,20 @@ class Market:
         self.RSI1Day = None
         self.MACD = None
         self.ADX = None
+        self.quantity = 0 # Number of shares held
+
+    def write_transaction(self, quantity, operation):
+        """
+        Writes transaction info to file as csv. Should be called by every 
+        buy/sell operation
+        """
+        csv_line = f"{self.market_name},{time.time()},{operation},{quantity}"
+        with open(self.market_name, "a") as outfile:
+            outfile.write(csv_line)
+
+        # Update the stored quantity
+        op = -1 if operation=="sell" else 1
+        self.quantity = self.quantity + op*quantity
 
     def update(self):
         """
@@ -124,6 +139,10 @@ class Market:
 
 
     def sell(self):
+        """
+        Sells all shares
+        """
+        self.write_transaction(self.quantity, "sell")
         return
 
     def buysell_if_should(self):
