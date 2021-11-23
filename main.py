@@ -22,10 +22,22 @@ def loop(tracked_markets, limit=10, sleeper=2):
         scores = [m.score for m in tracked_markets]
 
         buys = []
+        rsiPasses = 0
+        adxPasses = 0
+        macdPasses = 0
         for m in tracked_markets:
-            if(m.score == 3):
+            if m.score == 3 :
                 buys.append(m.market_name)
+            if m.ADX > 25 :
+                adxPasses+=1
+            if m.RSI1Day < 30 :
+                rsiPasses+=1
+            if (m.MACD - m.MACDYest)/abs(m.MACDYest) * 100 > 0:
+                macdPasses+=1
         logging.info("BUYS: %s", buys)
+        logging.info("macd passes: %s", macdPasses)
+        logging.info("adx passes: %s", adxPasses)
+        logging.info("rsi passes: %s", rsiPasses)
 
         logging.info("Scores %s", scores)
         msg = f"Sleeping {sleeper}s, going again! {100*monitor/limit}% {monitor}/{limit}"
