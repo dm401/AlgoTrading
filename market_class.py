@@ -1,3 +1,4 @@
+from numpy import quantile
 import requests
 import pandas as pd
 import ta.momentum
@@ -5,6 +6,8 @@ import ta.trend
 import datetime
 import logging
 import time
+
+from consts import base_tingo_url, IG_BASE_URL, IG_DEMO_BASE, IG_PROD_BASE
 
 class Market:
     apikey = open("apikey.txt").readline()
@@ -19,12 +22,12 @@ class Market:
         self.ADX = None
         self.quantity = 0 # Number of shares held
 
-    def write_transaction(self, quantity, operation):
+    def write_transaction(self, quantity, price, operation):
         """
         Writes transaction info to file as csv. Should be called by every 
         buy/sell operation
         """
-        csv_line = f"{self.market_name},{time.time()},{operation},{quantity}"
+        csv_line = f"{self.market_name},{time.time()},{operation},{quantity},{price}"
         with open(self.market_name, "a") as outfile:
             outfile.write(csv_line)
 
@@ -54,10 +57,15 @@ class Market:
                 i -= 1
             startDate = startDate - datetime.timedelta(days=1)
         endDate = datetime.date.today() - datetime.timedelta(days=1)
-
-        url = f"https://api.tiingo.com/tiingo/daily/{self.market_name}/prices?startDate={startDate}" \
-              f"&resampleFreq=daily&token={self.apikey}&endDate={endDate}&format=json"
-        x = handle_get_req(url)
+        url = base_tingo_url.format(f"daily/{self.market_name}/prices")
+        params = {
+            "startDate": startDate,
+            "resampleFreq": "daily",
+            "token": self.apikey,
+            "endDate": endDate,
+            "format": "json"
+        }
+        x = handle_get_req(url=url, params=params)
         if not x.json():
             logging.debug("Nothing in response...")
         df = pd.DataFrame(x.json())
@@ -138,23 +146,83 @@ class Market:
             logging.debug(self.market_name + " passing MACD\n")
 
 
-    def sell(self):
+    def should_buy(self):
         """
-        Sells all shares
+        Checks if we're meeting our conditions for all indicators
+        and returns true if so
         """
-        self.write_transaction(self.quantity, "sell")
+        return (self.score >= 3)
+
+    def should_sell(self):
         return
 
-    def buysell_if_should(self):
+    def buy(self, value_per_buy):
+        """
+        Buys shares
+        Link to API docs for buy/sell
+        There are various order types, it sounds like we want to make a MARKET
+        order, which is a type of immediate order. Pass in Market as the ordertype
+        when opening an OTC position
+        https://labs.ig.com/rest-trading-api-reference/service-detail?id=608
+
+        POST to endpoint to create a position
+        """
+        market_info = requests.get(IG_BASE_URL.format(f"/markets/{self.epic}"))
+        market_info.raise_for_status()
+        market_info = market_info.json().get("snapshot")
+        buy_price = market_info.get("offer")
+
+        quantity = value_per_buy/buy_price
+        self.quantity = quantity
+        url = IG_BASE_URL.format("/positions/otc")
+        data = {
+            "currencyCode": "GBP", # TODO - check if this needs changing
+            "dealReference": f"{self.market}",
+            "epic": self.epic, # TODO - need to get this from /markets. EPIC is an IG specific code
+            "expiry": "-",
+            "orderType": "MARKET",
+            "dealSize": round(quantity, 10),
+            "direction": "BUY"
+        }
+
+        resp = requests.post(url=url, data=data)
+        self.deal_ref = resp.json()
+        self.write_transaction(self.quantity, buy_price, "buy")
+        # TODO - may need to confirm the deal reference???
+        return
+
+    def sell(self):
+        """
+        Sells all shares in the market
+        """
+        url = IG_BASE_URL.format("/positions/otc")
+        data = {
+            "currencyCode": "GBP", # TODO - check if this needs changing
+            "dealReference": f"{self.market}",
+            "epic": self.epic, # TODO - need to get this from /markets. EPIC is an IG specific code
+            "expiry": "-",
+            "orderType": "MARKET",
+            "dealSize": self.quantity,
+            "direction": "SELL"
+        }
+
+        resp = requests.post(url=url, data=data)
+        self.sell_deal_ref = resp.json()
+        # self.write_transaction(self.quantity, sell_price, "sell")
+        return
+    
+
+
+    def buysell_if_should(self, value_per_buy):
         if self.should_buy():
-            self.buy()
+            self.buy(value_per_buy)
         if self.should_sell():
             self.sell()
 
-def handle_get_req(url, n=0):
+def handle_get_req(url, params,n=0):
     while n < 3:
         try:
-            resp = requests.get(url)
+            resp = requests.get(url, params)
             resp.raise_for_status()
         except requests.HTTPError as exc:
             if resp.status_code == 429 and n < 3:

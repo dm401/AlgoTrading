@@ -3,13 +3,32 @@ import time
 import numpy
 import logging
 import consts
-
+import redis
+import requests
 # Setup logging to file
 logging.basicConfig(format=consts.FORMAT, filename=consts.LOGFILE, level=consts.LOGLEVEL)
 
 
-def loop(tracked_markets, limit=10, sleeper=2):
+class CapitalTracker:
+    def __init__(self):
+        self.last_update = 0
 
+    def value_to_spend(self):
+        if time.time() - self.last_update > 24*60*60:
+            self.capital = self.get_capital()
+        return self.capital/10
+
+    def get_capital(self):
+        # Check if balance is total including amount invested or not
+        # This is what we want (total of available + invested.)
+        self.capital = requests.get(consts.IG_BASE_URL.format("accounts")).json().get("balance").get("balance")
+
+
+capital_tracker = CapitalTracker()
+
+def loop(tracked_markets, limit=10, sleeper=2):
+    
+    value_per_buy = capital_tracker.value_to_spend()
     monitor = 0
     while monitor < 2:
         funcs.get_all_live_data(tracked_markets)
@@ -53,6 +72,11 @@ def loop(tracked_markets, limit=10, sleeper=2):
         logging.info("Filtered out the following invalid markets %s", invalid_markets)
         tracked_markets = valid_markets
         monitor += 1
+
+
+        # Here is where we will buy/sell
+        for m in tracked_markets:
+            m.buysell_if_should(value_per_buy)
         time.sleep(sleeper)
 
 
