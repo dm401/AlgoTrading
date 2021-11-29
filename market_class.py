@@ -131,6 +131,7 @@ class Market:
         MACDs = ta.trend.MACD(close)
         self.MACD = MACDs.macd_diff().values[-1]
         self.MACDYest = MACDs.macd_diff().values[-2]
+        self.MACDYestYest = MACDs.macd_diff().values[-3]
 
 
     def compareToThresholds(self):
@@ -141,7 +142,8 @@ class Market:
         if(self.RSI1Day < 30):
             self.score += 1
             logging.debug(self.market_name + " passing RSI\n")
-        if((self.MACD - self.MACDYest)/abs(self.MACDYest) * 100 > 0):
+        #MACD condition: 3 days with consecutive increase AND today macd hist value > 0
+        if(self.MACD > self.MACDYest > self.MACDYestYest and self.MACD > 0):
             self.score += 1
             logging.debug(self.market_name + " passing MACD\n")
 

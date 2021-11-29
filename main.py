@@ -51,7 +51,7 @@ def loop(tracked_markets, limit=10, sleeper=2):
                 adxPasses+=1
             if m.RSI1Day < 30 :
                 rsiPasses+=1
-            if (m.MACD - m.MACDYest)/abs(m.MACDYest) * 100 > 0:
+            if m.MACD > m.MACDYest > m.MACDYestYest and m.MACD > 0:
                 macdPasses+=1
         logging.info("BUYS: %s", buys)
         logging.info("macd passes: %s", macdPasses)
