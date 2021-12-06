@@ -73,7 +73,6 @@ def loop(tracked_markets, limit=10, sleeper=2):
         tracked_markets = valid_markets
         monitor += 1
 
-
         # Here is where we will buy/sell
         for m in tracked_markets:
             m.buysell_if_should(value_per_buy)
