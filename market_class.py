@@ -156,7 +156,30 @@ class Market:
         return (self.score >= 3)
 
     def should_sell(self):
-        return
+        """
+        Checks if we're meeting our conditions for all indicators
+        and returns true if so
+        """
+        # currently indicators calculated with tiingo api, consider ig?
+        # would be more efficient to only run this func on markets currently bought into.
+
+        # stochastic oscillator > 70, macd 3 periods continued decrease
+        df = self.data
+        low = df['low'].squeeze()
+        high = df['high'].squeeze()
+        close = df['close'].squeeze()
+
+        stoch = ta.momentum.StochasticOscillator(high, low, close, 5, 1)
+        stoch_score = stoch.stoch().values[-1]
+        if stoch_score > 70:
+            stoch_sell = True
+        if self.MACD < self.MACDYest < self.MACDYestYest:
+            macd_sell = True
+
+        if stoch_sell and macd_sell:
+            return True
+
+        return False
 
     def buy(self, value_per_buy):
         """
